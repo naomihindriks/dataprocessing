@@ -1,4 +1,5 @@
 SAMPLES = ["A", "B", "C", "D"]
+PATH = "/commons/Themas/Thema11/Dataprocessing/data"
 
 
 rule all:
@@ -8,8 +9,8 @@ rule all:
 
 rule bwa_mapping:
     input: 
-        "/commons/Themas/Thema11/Dataprocessing/WC02/data/genome.fa",
-        "/commons/Themas/Thema11/Dataprocessing/WC02/data/samples/{sample}.fastq"
+        PATH + "/genome.fa",
+        PATH + "/samples/{sample}.fastq"
     output:
         "mapped_reads/{sample}.bam"
     message: 
@@ -44,7 +45,7 @@ rule samtools_index:
 
 rule bcftools_call:
     input:
-        fa="/commons/Themas/Thema11/Dataprocessing/WC02/data/genome.fa",
+        fa= PATH + "/genome.fa",
         bam=expand("sorted_reads/{sample}.bam", sample=SAMPLES),
         bai=expand("sorted_reads/{sample}.bam.bai", sample=SAMPLES)
     output:
