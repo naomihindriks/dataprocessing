@@ -1,1 +1,8 @@
-*/.snakemake
+/*
+!/README.md
+!/WC-02
+/WC-02/*
+!/WC-02/Snakefile
+!/WC-02/out.html
+!/WC-02/dag.svg
+!/WC-02/dag.png
