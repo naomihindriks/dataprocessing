@@ -7,16 +7,20 @@ rule all:
         "out.html"
 
 
-rule bwa_mapping:
-    input: 
+
+
+
+rule bowtie_mapping:
+    input:
         PATH + "/genome.fa",
         PATH + "/samples/{sample}.fastq"
     output:
         "mapped_reads/{sample}.bam"
     message: 
-        "executing bwa mem on the following {input} to generate the following {output}"
+        "executing bowtie on the following {input} to generate the following {output}"
     shell:
-        "bwa mem {input} | samtools view -Sb - > {output}"
+        "bowtie {input} | samtools view -Sb - > {output}"
+
 
 
 rule samtools_sort:
