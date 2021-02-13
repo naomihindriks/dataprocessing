@@ -1,5 +1,13 @@
-SAMPLES = ["A", "B", "C", "D"]
-PATH = "/commons/Themas/Thema11/Dataprocessing/data"
+import os.path
+from os import path
+
+SAMPLES = ["A", "B", "C"]
+
+if (not path.exists("data")):
+    shell("mkdir data")
+    shell("mkdir data/samples")
+    shell("cp ~/../../commons/Themas/Thema11/Dataprocessing/WC02/data/{{genome.fa,genome.fa.amb,genome.fa.ann,genome.fa.bwt,genome.fa.fai,genome.fa.pac,genome.fa.sa}} data")
+    shell("cp ~/../../commons/Themas/Thema11/Dataprocessing/WC02/data/samples/{{A.fastq,B.fastq,C.fastq}} data/samples")
 
 
 rule all:
@@ -7,20 +15,16 @@ rule all:
         "out.html"
 
 
-
-
-
-rule bowtie_mapping:
+rule bwa_mapping:
     input:
-        PATH + "/genome.fa",
-        PATH + "/samples/{sample}.fastq"
+        "data/genome.fa",
+        "data/samples/{sample}.fastq"
     output:
         "mapped_reads/{sample}.bam"
     message: 
-        "executing bowtie on the following {input} to generate the following {output}"
+        "executing bwa mem on the following {input} to generate the following {output}"
     shell:
-        "bowtie {input} | samtools view -Sb - > {output}"
-
+        "bwa mem {input} | samtools view -Sb - > {output}"
 
 
 rule samtools_sort:
@@ -49,7 +53,7 @@ rule samtools_index:
 
 rule bcftools_call:
     input:
-        fa= PATH + "/genome.fa",
+        fa= "data/genome.fa",
         bam=expand("sorted_reads/{sample}.bam", sample=SAMPLES),
         bai=expand("sorted_reads/{sample}.bam.bai", sample=SAMPLES)
     output:
@@ -83,4 +87,8 @@ rule report:
 
         This resulted in {n_calls} variants (see Table T1_).
         """, output[0], metadata="Author: Mr Pipeline", T1=input[0])
-      
+
+
+rule clean:
+    shell:
+        "rm -dr data mapped_reads sorted_reads calls"
