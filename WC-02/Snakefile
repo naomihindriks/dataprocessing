@@ -8,8 +8,8 @@ rule all:
 
 rule bwa_mapping:
     input: 
-        "data/genome.fa",
-        "data/samples/{sample}.fastq"
+        "~/../../commons/Themas/Thema11/Dataprocessing/WC02/data/genome.fa",
+        "~/../../commons/Themas/Thema11/Dataprocessing/WC02/data/samples/{sample}.fastq"
     output:
         "mapped_reads/{sample}.bam"
     message: 
@@ -44,7 +44,7 @@ rule samtools_index:
 
 rule bcftools_call:
     input:
-        fa="data/genome.fa",
+        fa="~/../../commons/Themas/Thema11/Dataprocessing/WC02/data/genome.fa",
         bam=expand("sorted_reads/{sample}.bam", sample=SAMPLES),
         bai=expand("sorted_reads/{sample}.bam.bai", sample=SAMPLES)
     output:
