@@ -3,6 +3,11 @@
 !/WC-02
 /WC-02/*
 !/WC-02/Snakefile
-!/WC-02/out.html
+!/WC-02/out_bwa.html
+!/WC-02/out_bowtie.html
 !/WC-02/dag.svg
 !/WC-02/dag.png
+!/WC-02/dag_after_chalanges.png
+!/WC-02/dag_after_chalanges.svg
+!/WC-03
+/WC-03/*
