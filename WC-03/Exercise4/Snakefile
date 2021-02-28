@@ -1,0 +1,8 @@
+include: "other.snakefile"
+
+workdir: "/students/2020-2021/Thema11/njhindriks/"
+
+
+rule all:
+    input:  
+        "out.html"

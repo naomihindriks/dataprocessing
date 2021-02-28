@@ -1,17 +1,10 @@
 from os import path
 from os.path import join
 
+configfile: "config.yaml"
+
 workdir: "/students/2020-2021/Thema11/njhindriks/"
 FASTQ_DIR = 'samples/'
-
-
-SAMPLES = ["A", "B", "C"]
-
-
-rule all:
-    input:  
-        "out.html"
-
 
 rule mapping:
     input:
@@ -53,8 +46,8 @@ rule samtools_index:
 rule bcftools_call:
     input:
         fa= "genome.fa",
-        bam=expand("sorted_reads/{sample}.bam", sample=SAMPLES),
-        bai=expand("sorted_reads/{sample}.bam.bai", sample=SAMPLES)
+        bam=expand("sorted_reads/{sample}.bam", sample=config["samples"]),
+        bai=expand("sorted_reads/{sample}.bam.bai", sample=config["samples"])
     output:
         "calls/all.vcf"
     message:
@@ -86,4 +79,3 @@ rule report:
 
         This resulted in {n_calls} variants (see Table T1_).
         """, output[0], metadata="Author: Mr Pipeline", T1=input[0])
-

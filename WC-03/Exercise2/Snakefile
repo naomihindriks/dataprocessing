@@ -1,4 +1,3 @@
-
 from snakemake.remote.NCBI import RemoteProvider as NCBIRemoteProvider
 NCBI = NCBIRemoteProvider(email="n.j.hindriks@st.hanze.nl")
 

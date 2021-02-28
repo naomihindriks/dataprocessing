@@ -1,0 +1,4 @@
+samples:
+    A : /samples/A.fastq
+    B : /samples/B.fastq
+    C : /samples/C.fastq

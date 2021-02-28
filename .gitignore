@@ -26,3 +26,9 @@
 !/WC-03/Exercise3
 /WC-03/Exercise3/*
 !/WC-03/Exercise3/Snakefile
+
+!/WC-03/Exercise4
+/WC-03/Exercise4/*
+!/WC-03/Exercise4/Snakefile
+!/WC-03/Exercise4/other.snakefile
+!/WC-03/Exercise4/config.yaml
