@@ -22,3 +22,7 @@
 !/WC-03/Exercise2
 /WC-03/Exercise2/*
 !/WC-03/Exercise2/Snakefile
+
+!/WC-03/Exercise3
+/WC-03/Exercise3/*
+!/WC-03/Exercise3/Snakefile
