@@ -3,6 +3,7 @@
 
 !/WC-02
 /WC-02/*
+
 !/WC-02/Snakefile
 !/WC-02/out_bwa.html
 !/WC-02/out_bowtie.html
@@ -13,6 +14,11 @@
 
 !/WC-03
 /WC-03/*
+
 !/WC-03/Exercise1
 /WC-03/Exercise1/*
 !/WC-03/Exercise1/Snakefile
+
+!/WC-03/Exercise2
+/WC-03/Exercise2/*
+!/WC-03/Exercise2/Snakefile

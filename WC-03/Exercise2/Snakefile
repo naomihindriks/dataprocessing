@@ -1,0 +1,28 @@
+
+from snakemake.remote.NCBI import RemoteProvider as NCBIRemoteProvider
+NCBI = NCBIRemoteProvider(email="n.j.hindriks@st.hanze.nl")
+
+# get accessions for the first 3 results in a search for full-length sars cov 2 virus genomes
+# the query parameter accepts standard GenBank search syntax
+query = '"Severe acute respiratory syndrome coronavirus 2"[Organism] AND (("27000"[SLEN] : "31000"[SLEN]) AND ("2019/01/01"[PDAT] : "2021/02/27"[PDAT])) '
+accessions = NCBI.search(query, retmax=4)
+
+# give the accessions a file extension to help the RemoteProvider determine the
+# proper output type.
+input_files = expand("{acc}.fasta", acc=accessions)
+
+rule all:
+    input:
+        "multifasta.fasta"
+
+rule download_and_copy:
+    input:
+        # Since *.fasta files could come from several different databases, specify the database here.
+        # if the input files are ambiguous, the provider will alert the user with possible options
+        # standard options like "seq_start" are supported
+        NCBI.remote(input_files, db="nuccore")
+
+    output:
+        "multifasta.fasta"
+    run:
+        shell("cat {input} > multifasta.fasta")
