@@ -1,5 +1,6 @@
 /*
 !/README.md
+
 !/WC-02
 /WC-02/*
 !/WC-02/Snakefile
@@ -9,5 +10,9 @@
 !/WC-02/dag.png
 !/WC-02/dag_after_chalanges.png
 !/WC-02/dag_after_chalanges.svg
+
 !/WC-03
 /WC-03/*
+!/WC-03/Exercise1
+/WC-03/Exercise1/*
+!/WC-03/Exercise1/Snakefile

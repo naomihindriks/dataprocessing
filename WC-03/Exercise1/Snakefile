@@ -1,0 +1,25 @@
+import os
+from snakemake.remote.NCBI import RemoteProvider as NCBIRemoteProvider
+NCBI = NCBIRemoteProvider(email="n.j.hindriks@st.hanze.nl")
+
+rule all:
+    input:
+        NCBI.remote("NC_045512.2.fasta", db="nuccore")
+    run:
+        outputName = os.path.basename("test.fasta")
+        shell("mv {input} {outputName}")
+
+
+
+
+# HTTP
+
+# rule all:
+#     input:
+#         "test.txt"
+
+# rule bla:
+#     output: 
+#         "test.txt"
+#     shell:
+#         "wget bioinf.nl/~fennaf/snakemake/test.txt"
