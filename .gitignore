@@ -37,3 +37,7 @@
 /WC-04/*
 !/WC-04/Snakefile
 !/WC-04/heatmap.R
+
+!/WC-05
+/WC-05/*
+!/WC-05/Snakefile
