@@ -32,3 +32,8 @@
 !/WC-03/Exercise4/Snakefile
 !/WC-03/Exercise4/other.snakefile
 !/WC-03/Exercise4/config.yaml
+
+!/WC-04
+/WC-04/*
+!/WC-04/Snakefile
+!/WC-04/heatmap.R
