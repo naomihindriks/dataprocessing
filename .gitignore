@@ -46,4 +46,15 @@
 !/final/*
 /final/.snakemake
 /final/output/*
+!/final/output/barplot.jpg
+!/final/output/barplot2.jpg
+!/final/output/quality_check
+!/final/output/fastq_files/SRR952153_1.fastq
+!/final/output/fastq_files/SRR952153_2.fastq
+!/final/output/fastq_files/SRR952154_1.fastq
+!/final/output/fastq_files/SRR952154_2.fastq
+!/final/output/exported_data
+!/final/output/denoising
+!/final/output/classification
+
 
