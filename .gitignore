@@ -41,3 +41,9 @@
 !/WC-05
 /WC-05/*
 !/WC-05/Snakefile
+
+!/final
+!/final/*
+/final/.snakemake
+/final/output/*
+

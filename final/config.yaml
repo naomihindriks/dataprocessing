@@ -1,0 +1,21 @@
+#configfile config.yaml
+data_location: "data/"
+output_location: "output/"
+log_location: "logs/"
+
+denoising_params:
+  trunc-len-f: 150
+  trunc-len-r: 150
+  trim-left-f: 13
+  trim-left-r: 13
+  trunc-q: 0
+  chimera-method: 'pooled'
+  pooling-method: 'pseudo'
+
+barplot_params:
+  taxonomic_level: "Phylum"
+  percentage_present_in_sample: 0.5
+  filename: "barplot.jpg"
+  width: 600
+  height: 600
+  filter: "Kingdom=Bacteria"

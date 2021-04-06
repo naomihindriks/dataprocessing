@@ -1,0 +1,184 @@
+from os.path import join
+
+configfile: "config.yaml"
+
+samples = []
+
+data_dir = config["data_location"]
+output_dir = config["output_location"]
+log_dir = config["log_location"]
+
+with open(join(data_dir, "SRR_Acc_List.txt")) as f:
+    lines = f.readlines()
+    for line in lines:
+        samples.append(line.strip())
+
+
+rule all:
+    input:
+        join(output_dir, config["barplot_params"]["filename"])
+
+
+rule download_fastq:
+    params:
+        sra="{sra}",
+        path=join(output_dir, "fastq_files")
+    output:
+        join(output_dir, "fastq_files/{sra}_{frr}.fastq")
+    message:
+        "Downloading fastq file with accession number {params.sra}, using {threads} threads. Resulting in {output}"
+    log:
+        join(log_dir, "fasterq_dump/{sra}_{frr}.log")
+    threads:
+         4
+    shell:
+        "fasterq-dump {params.sra} -O {params.path} -e {threads} --force "
+        "> {log}"
+
+
+rule make_mainfest:
+    input:
+        expand(rules.download_fastq.output, sra=samples, frr=[1, 2])
+    output:
+        join(output_dir, "pe-33-manifest")
+    message:
+        "Make save all the fastq file names in a qiime manifest file. Resulting in {output}."
+    run:
+        path = join("$PWD/", output_dir, "fastq_files")
+        with open(output[0], "w") as f:
+            f.write("sample-id\tforward-absolute-filepath\treverse-absolute-filepath\n")
+            for sample in samples:
+                f.write("{}\t{}/{}_1.fastq\t{}/{}_2.fastq\n".format(sample, path, sample, path, sample))
+
+
+rule make_qiime_artifact:
+    input:
+        rules.make_mainfest.output
+    output:
+        join(output_dir, "qiime_artifact/paired-end-demux.qza")
+    message:
+        "Making qiime2 artifact using {threads} threads. Resulting in {output}"
+    log:
+        join(log_dir, "qiime/make_artifact.log")
+    threads:
+         workflow.cores
+    shell:
+        "qiime tools import " 
+            "--type 'SampleData[PairedEndSequencesWithQuality]' "
+            "--input-path {input} "
+            "--output-path {output} "
+            "--input-format PairedEndFastqManifestPhred33V2 "
+            "> {log}"
+
+
+rule quality_check_qiime:
+    input:
+        rules.make_qiime_artifact.output
+    output:
+        join(output_dir, "quality_check/visualization.qzv")
+    message:
+        "Doing a quality check on the data in {input}. Resulting in {output}. Using {threads} threads"
+    log:
+        join(log_dir, "qiime/quality_check.log")
+    threads:
+        workflow.cores
+    shell:
+        "qiime demux summarize "
+            "--i-data {input} "
+            "--o-visualization {output} "
+            "> {log}" 
+
+
+rule merge_forward_reversed:
+    input:
+        rules.make_qiime_artifact.output
+    output:
+        stats=join(output_dir, "denoising/denoising-stats.qza"),
+        reads=join(output_dir, "denoising/rep-seqs.qza"),
+        feature_table=join(output_dir, "denoising/feature_table.qza")
+    message:
+        "Denoising the data in the qiime2 artifact ({input}). Using {threads} threads. Resulting in the following files: {output.stats}, {output.reads}, {output.feature_table}"
+    log:
+        join(log_dir, "qiime/denoise.log")
+    threads:
+        workflow.cores
+    shell:
+        "qiime dada2 denoise-paired "
+            "--i-demultiplexed-seqs {input} "
+            "--p-trunc-len-f {config[denoising_params][trunc-len-f]} "
+            "--p-trunc-len-r {config[denoising_params][trunc-len-r]} " 
+            "--p-trim-left-f {config[denoising_params][trim-left-f]} "
+            "--p-trim-left-r {config[denoising_params][trim-left-r]} "
+            "--p-trunc-q {config[denoising_params][trunc-q]} "
+            "--p-chimera-method {config[denoising_params][chimera-method]} "
+            "--p-pooling-method {config[denoising_params][pooling-method]} "
+            "--p-n-threads 0 "
+            "--o-table {output.feature_table} "
+            "--o-representative-sequences {output.reads} "
+            "--o-denoising-stats {output.stats} "
+            " > {log}"
+
+
+rule classify_features:
+    input:
+        reads=rules.merge_forward_reversed.output.reads,
+        classifier=join(data_dir, "classifier.qza")
+    output:
+        join(output_dir, "classification/taxonomy.qza")
+    message:
+        "Determining taxonomy of {input.reads} with {input.classifier}. Resulting in {output}. Using {threads} threads."
+    log:
+        join(log_dir, "qiime/classify_features.log")
+    threads:
+        workflow.cores    
+    shell:
+        "qiime feature-classifier classify-sklearn "
+        "--i-classifier {input.classifier} "
+        "--i-reads {input.reads} "
+        "--o-classification {output} "
+        "> {log}"
+
+
+rule export_qiime_files:
+    input:
+        feature_table=rules.merge_forward_reversed.output.feature_table,
+        taxonomy=rules.classify_features.output
+    output:
+        feature_table=join(output_dir, "exported_data/feature-table.tsv"),
+        taxonomy=join(output_dir, "exported_data/taxonomy.tsv")
+    params:
+        output_path=join(output_dir, "exported_data")
+    message:
+        "Exporting and converting {input.feature_table} to {output.feature_table} and {input.taxonomy} to {output.taxonomy}"
+    log:
+        join(log_dir, "qiime/export_files.log")
+    threads:
+        workflow.cores
+    shell:
+        "source scripts/export_feature_table_and_taxonomy.sh {input.feature_table} {output.feature_table} {input.taxonomy} {params.output_path} "
+        "> {log}"
+
+
+rule make_barplot:
+    input:
+        feature_table=rules.export_qiime_files.output.feature_table,
+        taxonomy=rules.export_qiime_files.output.taxonomy,
+        run_info=join(data_dir, "SraRunTable.txt")
+    output:
+        join(output_dir, config["barplot_params"]["filename"])
+    message:
+        "Creating barplot with the data in {input.feature_table}, {input.taxonomy} and {input.run_info}. Resulting in {output}. Using {threads} threads"
+    log:
+        join(log_dir, "barplot_making.log")
+    threads:
+        workflow.cores
+    shell:
+        "Rscript scripts/make_barplot.R " 
+        "{input.feature_table} {input.taxonomy} {input.run_info} "
+        "{config[barplot_params][taxonomic_level]} "
+        "{config[barplot_params][percentage_present_in_sample]} "
+        "{output} "
+        "{config[barplot_params][width]} "
+        "{config[barplot_params][height]} "
+        "{config[barplot_params][filter]} "
+        "> {log}"

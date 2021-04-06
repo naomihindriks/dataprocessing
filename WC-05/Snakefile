@@ -1,0 +1,94 @@
+from os import path
+from os.path import join
+
+configfile: "config.yaml"
+
+DATA_DIR = "/students/2020-2021/Thema11/njhindriks/"
+FASTQ_DIR = "samples/"
+BENCHMARK_DIR = "benchmarks/condor_multithread/"
+
+
+rule all:
+    input:  
+        "out.html"
+
+rule mapping:
+    input:
+        join(DATA_DIR, "genome.fa"),
+        join(DATA_DIR, FASTQ_DIR, "{sample}.fastq")
+    output:
+        "mapped_reads/{sample}.bam"
+    benchmark:
+        join(BENCHMARK_DIR, "mapping/{sample}.benchmark.txt")
+    message: 
+        "executing bwa mem on the following {input} to generate the following {output}"
+    threads: 80
+    shell:
+        "bwa mem -t {threads} {input} | samtools view -Sb - > {output}"
+
+
+rule samtools_sort:
+    input:
+        "mapped_reads/{sample}.bam"
+    output:
+        "sorted_reads/{sample}.bam"
+    benchmark:
+        join(BENCHMARK_DIR, "samtools_sort/{sample}.benchmark.txt")
+    message:
+        "executing samtools sort on the following {input} to generate the following {output}"
+    threads: 40
+    shell:
+        "samtools sort --threads {threads} -T sorted_reads/{wildcards.sample} "
+        "-O bam {input} > {output}"
+
+
+rule samtools_index:
+    input:
+        "sorted_reads/{sample}.bam"
+    output:
+        "sorted_reads/{sample}.bam.bai"
+    benchmark:
+        join(BENCHMARK_DIR, "samtools_index/{sample}.benchmark.txt")
+    message:
+        "executing samtools index on the following {input} to generate the following {output}"
+    threads: 40
+    shell:
+        "samtools index -@ {threads} {input}"
+
+
+rule bcftools_call:
+    input:
+        fa= join(DATA_DIR, "genome.fa"),
+        bam=expand("sorted_reads/{sample}.bam", sample=config["samples"]),
+        bai=expand("sorted_reads/{sample}.bam.bai", sample=config["samples"])
+    output:
+        "calls/all.vcf"
+    message:
+        "executing variant calling with samtools and bcftools with {input}, resulting in {output}" 
+    shell:
+        "samtools mpileup -g -f {input.fa} {input.bam} | "
+        "bcftools call -mv - > {output}"
+
+
+rule report:
+    input:
+        "calls/all.vcf"
+    output:
+        "out.html"
+    message:
+        "generating report with {input} resulting in {output}"
+    run:
+        from snakemake.utils import report
+        with open(input[0]) as f:
+            n_calls = sum(1 for line in f if not line.startswith("#"))
+
+        report("""
+        An example workflow
+        ===================================
+
+        Reads were mapped to the Yeas reference genome 
+        and variants were called jointly with
+        SAMtools/BCFtools.
+
+        This resulted in {n_calls} variants (see Table T1_).
+        """, output[0], metadata="Author: Mr Pipeline", T1=input[0])
